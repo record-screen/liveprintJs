@@ -5277,6 +5277,12 @@ or you can use record.mirror to access the mirror instance during recording.`;
     return ee.EventType = C, ee.IncrementalSource = N, ee.MouseInteractions = j, ee.Replayer = Ns, ee.ReplayerEvents = O, ee.addCustomEvent = Cs, ee.freezePage = Is, ee.record = be, ee.utils = kr, Object.defineProperty(ee, "__esModule", {value: !0}), ee
 }({});
 
+// Reading query params
+const url = new URL(window.location.href);
+const params = new URLSearchParams(url.search);
+const clientToken = params.get('clientToken') ? params.get('clientToken') : '';
+console.log('Clienttoken: ', clientToken)
+
 let automaticRecord = false;
 let saveOnSubmit = false;
 const events = [];
@@ -5305,7 +5311,7 @@ addEventListener("submit", async (event) => {
     const responseAsJson = await response.json();
     const clientIp = responseAsJson?.ip;
     const dataSubmit = {form: jsonObject, events, clientIp, userAgent, clientToken: clientToken ? clientToken : ''};
-    console.log('dataSubmit: ',dataSubmit)
+    console.log('dataSubmit: ', dataSubmit)
     const key = await saveRecord(JSON.stringify(dataSubmit));
     // endRecord(key)
 });
