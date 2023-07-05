@@ -5318,7 +5318,7 @@ addEventListener("submit", async (event) => {
 
 async function saveRecord(requestData) {
     console.log(`saveRecord#clientToken:#${clientToken}#`)
-    const response = await fetch(`https://happy-api-e5f69.ampt.app/liveprint/recording?clientToken=${clientToken}`, {
+    const response = await fetch(`https://delightful-idea-t4wmj.ampt.app/liveprint/recording?clientToken=${clientToken}`, {
         method: 'POST',
         body: requestData,
         headers: {
