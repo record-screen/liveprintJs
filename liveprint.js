@@ -5277,7 +5277,7 @@ or you can use record.mirror to access the mirror instance during recording.`;
     return ee.EventType = C, ee.IncrementalSource = N, ee.MouseInteractions = j, ee.Replayer = Ns, ee.ReplayerEvents = O, ee.addCustomEvent = Cs, ee.freezePage = Is, ee.record = be, ee.utils = kr, Object.defineProperty(ee, "__esModule", {value: !0}), ee
 }({});
 
-let automaticRecord = true;
+let automaticRecord = false;
 let saveOnSubmit = false;
 const events = [];
 
