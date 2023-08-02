@@ -5278,13 +5278,17 @@ or you can use record.mirror to access the mirror instance during recording.`;
 }({});
 
 // Reading query params
-const url = new URL(window.location.href);
-const params = new URLSearchParams(url.search);
-const clientToken = params.get('clientToken') ? params.get('clientToken') : '';
-console.log('Clienttoken: ', clientToken)
-
-let automaticRecord = false;
-let saveOnSubmit = false;
+const scriptElement = document.getElementById("livePrintScript");
+let clientToken = ''
+if (scriptElement) {
+    const scriptSrc = scriptElement.getAttribute("src");
+    const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
+    clientToken = urlParams.get("clientToken");
+} else {
+    console.error("You need add id='livePrintScript' to script" )
+}
+let automaticRecord = true;
+let saveOnSubmit = true;
 const events = [];
 
 
@@ -5293,7 +5297,7 @@ if (automaticRecord) {
 }
 
 function startRecord() {
-    console.log('startRecord')
+    console.log('starting liveprint')
     rrweb.record({
         emit(event) {
             events.push(event);
@@ -5303,24 +5307,47 @@ function startRecord() {
 }
 
 addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
+    console.log('liveprint#onSubmit')
+    if (saveOnSubmit) {
+        console.log('liveprint#saving on submit')
+        event.preventDefault();
+        const data = new FormData(event.target);
+        const recordKey = await saveRecordFormData(data);
+        console.log('Record key: ', recordKey)
+    }
+});
+
+async function saveRecordFormData(data) {
+    console.log('saveRecordFormData')
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     const userAgent = window.navigator.userAgent;
-    const response = await fetch("https://api.ipify.org/?format=json");
-    const responseAsJson = await response.json();
+    const responseIp = await fetch("https://api.ipify.org/?format=json");
+    const responseAsJson = await responseIp.json();
     const clientIp = responseAsJson?.ip;
     const dataSubmit = {form: jsonObject, events, clientIp, userAgent, clientToken: clientToken ? clientToken : ''};
     console.log('dataSubmit: ', dataSubmit)
-    const key = await saveRecord(JSON.stringify(dataSubmit));
-    // endRecord(key)
-});
-
-async function saveRecord(requestData) {
-    console.log(`saveRecord#clientToken:#${clientToken}#`)
     const response = await fetch(`https://scalable-package-aam6q.ampt.app/liveprint/recording?clientToken=${clientToken}`, {
         method: 'POST',
-        body: requestData,
+        body: JSON.stringify(dataSubmit),
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        }
+    });
+    return await response.json();
+}
+
+async function saveRecordFormObject(formDataObject) {
+    console.log('saveRecordFormObject')
+    const userAgent = window.navigator.userAgent;
+    const responseIp = await fetch("https://api.ipify.org/?format=json");
+    const responseAsJson = await responseIp.json();
+    const clientIp = responseAsJson?.ip;
+    const dataSubmit = {form: formDataObject, events, clientIp, userAgent, clientToken: clientToken ? clientToken : ''};
+    console.log('dataSubmit: ', dataSubmit)
+    const response = await fetch(`https://scalable-package-aam6q.ampt.app/liveprint/recording?clientToken=${clientToken}`, {
+        method: 'POST',
+        body: JSON.stringify(dataSubmit),
         headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
