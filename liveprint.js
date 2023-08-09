@@ -5326,7 +5326,7 @@ async function saveRecordFormData(data) {
     const clientIp = responseAsJson?.ip;
     const dataSubmit = {form: jsonObject, events, clientIp, userAgent, clientToken: clientToken ? clientToken : ''};
     console.log('dataSubmit: ', dataSubmit)
-    const response = await fetch(`https://striking-idea-mrrn3.ampt.app/liveprint/recording?clientToken=${clientToken}`, {
+    const response = await fetch(`https://striking-idea-mrrn3.ampt.app/api/public/liveprint/saveRecord`, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
@@ -5345,7 +5345,7 @@ async function saveRecordFormObject(formDataObject) {
     const clientIp = responseAsJson?.ip;
     const dataSubmit = {form: formDataObject, events, clientIp, userAgent, clientToken: clientToken ? clientToken : ''};
     console.log('dataSubmit: ', dataSubmit)
-    const response = await fetch(`https://striking-idea-mrrn3.ampt.app/liveprint/recording?clientToken=${clientToken}`, {
+    const response = await fetch(`https://striking-idea-mrrn3.ampt.app/api/public/liveprint/saveRecord`, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
