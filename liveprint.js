@@ -5285,16 +5285,37 @@ if (scriptElement) {
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
     clientToken = urlParams.get("clientToken");
 } else {
-    console.error("You need add id='livePrintScript' to script" )
+    console.error("You need add id='livePrintScript' to script")
 }
 let automaticRecord = true;
 let saveOnSubmit = true;
 const events = [];
-
-
+const livePrintApi = 'http://localhost:3000/api'
+console.log('clientToken:', clientToken)
 if (automaticRecord) {
     startRecord()
 }
+
+function liveprint() {
+
+    function test() {
+        console.log('Hello test');
+    }
+    function test2() {
+        console.log('Hello test 2');
+    }
+
+    return {
+        test: test,
+        test2: test2
+    };
+}
+
+// const liveprinter = liveprint();
+// liveprinter.test();
+// liveprinter.test2();
+
+
 
 function startRecord() {
     console.log('starting liveprint')
@@ -5326,7 +5347,7 @@ async function saveRecordFormData(data) {
     const clientIp = responseAsJson?.ip;
     const dataSubmit = {form: jsonObject, events, clientIp, userAgent, clientToken: clientToken ? clientToken : ''};
     console.log('dataSubmit: ', dataSubmit)
-    const response = await fetch(`https://striking-idea-mrrn3.ampt.app/api/public/liveprint/saveRecord`, {
+    const response = await fetch(`${livePrintApi}/public/liveprint/saveRecord`, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
@@ -5345,7 +5366,7 @@ async function saveRecordFormObject(formDataObject) {
     const clientIp = responseAsJson?.ip;
     const dataSubmit = {form: formDataObject, events, clientIp, userAgent, clientToken: clientToken ? clientToken : ''};
     console.log('dataSubmit: ', dataSubmit)
-    const response = await fetch(`https://striking-idea-mrrn3.ampt.app/api/public/liveprint/saveRecord`, {
+    const response = await fetch(`${livePrintApi}/public/liveprint/saveRecord`, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
