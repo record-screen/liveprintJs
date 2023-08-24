@@ -11,11 +11,10 @@ function installDependencies(cb) {
 
 function build(cb) {
     console.log('Build')
-    gulp.src(['node_modules/moment/moment.js',
-        'node_modules/rrweb/dist/rrweb.js', 'src/*.js'])
-        .pipe(gp_concat('concat.js'))
+    gulp.src(['node_modules/rrweb/dist/rrweb.js', 'src/*.js'])
+        .pipe(gp_concat('liveprint-concat.js'))
         .pipe(gulp.dest('dist'))
-        .pipe(gp_rename('uglify.js'))
+        .pipe(gp_rename('liveprint.js'))
         .pipe(gp_uglify())
         .pipe(gulp.dest('dist'));
     cb();
