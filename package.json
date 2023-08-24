@@ -17,9 +17,15 @@
   },
   "homepage": "https://github.com/record-screen/liveprintJs#readme",
   "dependencies": {
-    "lodash": "^4.17.21"
+    "gulp-concat": "^2.6.1",
+    "gulp-rename": "^2.0.0",
+    "gulp-uglify": "^3.0.2",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "rrweb": "^2.0.0-alpha.4"
   },
   "devDependencies": {
+    "gulp": "^4.0.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   }
