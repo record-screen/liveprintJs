@@ -18,12 +18,9 @@ const events = [];
 const storageRecord = 'LIVEPRINT_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const livePrintApiSave = 'http://localhost:3000/api/public/liveprint/saveRecord'
+const livePrintApiSave = 'https://authentic-deploy-zfkq7.ampt.app/api/public/liveprint/saveRecord'
 let savingLoading = false;
 let record = true;
-console.log('clientToken:', clientToken)
-console.log('keepVideo:', keepVideo)
-console.log('saveOnSubmit:', saveOnSubmit)
 
 if (automaticRecord) {
     startRecord()
