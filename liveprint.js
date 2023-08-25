@@ -5301,9 +5301,6 @@ let eventsToSave = {};
 const livePrintApiSave = `https://sleek-source-xc6xk.ampt.app/liveprint/recording?clientToken=${clientToken}`
 let savingLoading = false;
 let record = true;
-console.log('clientToken:', clientToken)
-console.log('keepVideo:', keepVideo)
-console.log('saveOnSubmit:', saveOnSubmit)
 
 if (automaticRecord) {
     startRecord()
