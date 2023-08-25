@@ -5366,7 +5366,7 @@ async function livePrintSaveRecordWithOnsubmitEvent(data) {
     return await response.json();
 }
 
-async function saveRecord(data = {}) {
+async function livePrintSaveRecord(data = {}) {
     console.log('saveRecord');
     savingLoading = true;
     const userAgent = window.navigator.userAgent;

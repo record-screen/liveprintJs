@@ -18,8 +18,6 @@
     }
 
     function saveManual() {
-        console.log('saveManual');
-        saveRecordFormObject({name: 'Marco', lastName: 'Morales'});
     }
 
     // Evento de form submit, en ese momento se guardan los events
@@ -35,7 +33,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         // hello("World");
-        startRecord();
+        livePrintStartRecord();
         const currentPath = window.location.pathname;
         console.log(currentPath);
     })

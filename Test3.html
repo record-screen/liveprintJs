@@ -23,7 +23,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', function () {
-        startRecord();
+        livePrintStartRecord();
         const currentPath = window.location.pathname;
         console.log(currentPath);
     })
@@ -68,7 +68,7 @@
             <textarea class="form-control" aria-label="With textarea"></textarea>
         </div>
         <div class="input-group">
-            <button class="btn btn-primary" type="button" onclick="saveRecord()">Finish</button>
+            <button class="btn btn-primary" type="button" onclick="livePrintSaveRecord()">Finish</button>
         </div>
     </div>
 </form>
