@@ -22,11 +22,12 @@ const livePrintApiSave = 'https://authentic-deploy-zfkq7.ampt.app/api/public/liv
 let savingLoading = false;
 let record = true;
 
+
 if (automaticRecord) {
-    startRecord()
+    livePrintStartRecord()
 }
 
-function startRecord() {
+function livePrintStartRecord() {
     rrweb.record({
         emit(event) {
             if (record) {
@@ -49,14 +50,14 @@ addEventListener("submit", async (event) => {
         console.log('liveprint#saving on submit')
         event.preventDefault();
         const data = new FormData(event.target);
-        const recordKey = await saveRecordWithOnsubmitEvent(data);
+        const recordKey = await livePrintSaveRecordWithOnsubmitEvent(data);
         console.log('Record key: ', recordKey)
     }
 });
 
-async function saveRecordWithOnsubmitEvent(data) {
+async function livePrintSaveRecordWithOnsubmitEvent(data) {
     savingLoading = true
-    console.log('saveRecordWithOnsubmitEvent')
+    console.log('livePrintSaveRecordWithOnsubmitEvent')
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     const userAgent = window.navigator.userAgent;
     const responseIp = await fetch("https://api.ipify.org/?format=json");
@@ -86,7 +87,7 @@ async function saveRecordWithOnsubmitEvent(data) {
     return await response.json();
 }
 
-async function saveRecord(data = {}) {
+async function livePrintSaveRecord(data = {}) {
     console.log('saveRecord');
     savingLoading = true;
     const userAgent = window.navigator.userAgent;
@@ -116,4 +117,3 @@ async function saveRecord(data = {}) {
     }
     return await response.json();
 }
-
