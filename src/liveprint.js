@@ -24,6 +24,7 @@ let record = true;
 
 
 if (automaticRecord) {
+    console.log('liveprint start..')
     livePrintStartRecord()
 }
 
