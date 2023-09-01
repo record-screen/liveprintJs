@@ -5303,6 +5303,7 @@ let savingLoading = false;
 let record = true;
 
 if (automaticRecord) {
+    console.log('live print start..')
     livePrintStartRecord()
 }
 
