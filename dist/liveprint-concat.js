@@ -8130,9 +8130,9 @@ addEventListener("submit", async (event) => {
     console.log('liveprint#onSubmit')
     if (saveOnSubmit) {
         console.log('liveprint#saving on submit')
-        console.log('testAwait')
         const data = new FormData(event.target);
-        const recordKey = livePrintSaveRecordWithOnsubmitEvent(data);
+        const recordKey = await livePrintSaveRecordWithOnsubmitEvent(data);
+        console.log('Record key: ', recordKey)
     }
 });
 
