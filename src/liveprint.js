@@ -46,6 +46,7 @@ function livePrintStartRecord() {
 }
 
 addEventListener("submit", async (event) => {
+    event.preventDefault();
     console.log('liveprint#onSubmit')
     if (saveOnSubmit) {
         console.log('liveprint#saving on submit')
@@ -53,6 +54,7 @@ addEventListener("submit", async (event) => {
         const recordKey = await livePrintSaveRecordWithOnsubmitEvent(data);
         console.log('Record key: ', recordKey)
     }
+    event.target.submit();
 });
 
 async function livePrintSaveRecordWithOnsubmitEvent(data) {
