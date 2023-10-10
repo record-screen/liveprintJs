@@ -3,7 +3,7 @@ const scriptElement = document.getElementById("blackListPhone");
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
-    inputPhoneId = urlParams.get("blackListPhone") ? urlParams.get("inputPhoneId") : 'phone';
+    inputPhoneId = urlParams.get("inputPhoneId") ? urlParams.get("inputPhoneId") : 'phone';
 } else {
     console.error("You need add id='blackListPhone' to script")
 }
