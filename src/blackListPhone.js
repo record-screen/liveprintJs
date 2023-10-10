@@ -12,7 +12,27 @@ const phoneInputElement = document.getElementById(inputPhoneId);
 phoneInputElement.addEventListener("blur", function (event) {
     const phone = event.target.value;
     if (phone === '0000000000') {
-        alert(`Your phone number ${phone} is in black list`);
-        location.reload()
+        const dialog = document.createElement("dialog");
+        dialog.id = "blackListPhoneDialog";
+        dialog.innerHTML = `
+            <h5>Your phone is in blacklist.</h5>
+            <p>Do you want to continue and accept the call?</p>
+            <button id="blackListCancelBTn">No</button>
+            <button id="blackListContinueBTn">Yes</button>
+        `;
+        document.body.appendChild(dialog);
+        const myDialog = document.getElementById("blackListPhoneDialog");
+        myDialog.showModal();
+
+        const continueDialogButton = document.getElementById("blackListContinueBTn");
+        continueDialogButton.addEventListener("click", function () {
+            myDialog.close();
+        });
+
+        const blackListCancelBTn = document.getElementById("blackListCancelBTn");
+        blackListCancelBTn.addEventListener("click", function () {
+            location.reload()
+        });
     }
 });
+
