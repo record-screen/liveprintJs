@@ -1,5 +1,5 @@
 // Reading query params
-const scriptElement = document.getElementById("livePrintScript");
+const scriptElement = document.getElementById("formproofScript");
 let clientToken = ''
 let automaticRecord = true;
 let saveOnSubmit = true;
@@ -12,23 +12,23 @@ if (scriptElement) {
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     saveOnSubmit = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
 } else {
-    console.error("You need add id='livePrintScript' to script")
+    console.error("You need add id='formproofScript' to script")
 }
 const events = [];
-const storageRecord = 'LIVEPRINT_EVENTS';
+const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const livePrintApiSave = 'https://authentic-deploy-zfkq7.ampt.app/api/public/liveprint/saveRecord'
+const formProofApiSave = 'http://localhost:3000/api/public/formproof/saveRecord'
 let savingLoading = false;
 let record = true;
 
 
 if (automaticRecord) {
-    console.log('liveprint start..')
-    livePrintStartRecord()
+    console.log('formproof start..')
+    formProoftStartRecord()
 }
 
-function livePrintStartRecord() {
+function formProoftStartRecord() {
     rrweb.record({
         emit(event) {
             if (record) {
@@ -47,19 +47,19 @@ function livePrintStartRecord() {
 
 addEventListener("submit", async (event) => {
     event.preventDefault();
-    console.log('liveprint#onSubmit')
+    console.log('formproof#onSubmit')
     if (saveOnSubmit) {
-        console.log('liveprint#saving on submit')
+        console.log('formproof#saving on submit')
         const data = new FormData(event.target);
-        const recordKey = await livePrintSaveRecordWithOnsubmitEvent(data);
+        const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
         console.log('Record key: ', recordKey)
     }
     event.target.submit();
 });
 
-async function livePrintSaveRecordWithOnsubmitEvent(data) {
+async function formproofSaveRecordWithOnsubmitEvent(data) {
     savingLoading = true
-    console.log('livePrintSaveRecordWithOnsubmitEvent')
+    console.log('formproofSaveRecordWithOnsubmitEvent')
     const jsonObject = Object.fromEntries(Array.from(data.entries()));
     const userAgent = window.navigator.userAgent;
     const responseIp = await fetch("https://api.ipify.org/?format=json");
@@ -73,7 +73,7 @@ async function livePrintSaveRecordWithOnsubmitEvent(data) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(livePrintApiSave, {
+    const response = await fetch(formProofApiSave, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
@@ -89,8 +89,8 @@ async function livePrintSaveRecordWithOnsubmitEvent(data) {
     return await response.json();
 }
 
-async function livePrintSaveRecord(data = {}) {
-    console.log('saveRecord');
+async function formproofSaveRecord(data = {}) {
+    console.log('formproofSaveRecord#saveRecord');
     savingLoading = true;
     const userAgent = window.navigator.userAgent;
     const responseIp = await fetch("https://api.ipify.org/?format=json");
@@ -104,7 +104,7 @@ async function livePrintSaveRecord(data = {}) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(livePrintApiSave, {
+    const response = await fetch(formProofApiSave, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {

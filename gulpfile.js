@@ -11,10 +11,10 @@ function installDependencies(cb) {
 
 function build(cb) {
     console.log('Build')
-    gulp.src(['node_modules/rrweb/dist/rrweb.js', 'src/liveprint.js'])
-        .pipe(gp_concat('liveprint-concat.js'))
+    gulp.src(['node_modules/rrweb/dist/rrweb.js', 'src/formproof.js'])
+        .pipe(gp_concat('formproof-concat.js'))
         .pipe(gulp.dest('dist'))
-        .pipe(gp_rename('liveprint.js'))
+        .pipe(gp_rename('formproof.js'))
         .pipe(gp_uglify())
         .pipe(gulp.dest('dist'));
     cb();
@@ -32,7 +32,7 @@ function buildBlackList(cb) {
 }
 
 function watch() {
-    gulp.watch(['src/liveprint.js'], build);
+    gulp.watch(['src/formproof.js'], build);
 }
 
 function watchBuildBlackList() {
