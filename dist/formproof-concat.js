@@ -8099,7 +8099,7 @@ const events = [];
 const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const formProofApiSave = 'http://localhost:3000/api/public/formproof/saveRecord'
+const formProofApiSave = 'https://striking-idea-mrrn3.ampt.app/api/public/formproof/saveRecord'
 let savingLoading = false;
 let record = true;
 
