@@ -8099,7 +8099,7 @@ const events = [];
 const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const formProofApiSave = 'https://solid-build-i3mzm.ampt.app/api/recordings'
+const formProofApiSave = 'https://bright-source-jxr9r.ampt.app/api/recordings'
 let savingLoading = false;
 let record = true;
 
