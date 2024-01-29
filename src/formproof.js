@@ -18,7 +18,7 @@ const events = [];
 const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const formProofApiSave = 'https://bright-source-jxr9r.ampt.app/api/recordings'
+const formProofApiSave = 'https://intelligent-src-r12j9.ampt.app/api/recordings'
 let savingLoading = false;
 let record = true;
 
