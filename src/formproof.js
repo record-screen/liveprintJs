@@ -4,12 +4,17 @@ let clientToken = ''
 let automaticRecord = true;
 let saveOnSubmit = true;
 let keepVideo = false;
+let tfaTwilio = false;
+let blackList = false;
+let phoneInputId = 'phone';
 
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
     clientToken = urlParams.get("clientToken");
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
+    tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
+    blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
     saveOnSubmit = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
 } else {
     console.error("You need add id='formproofScript' to script")
@@ -18,10 +23,13 @@ const events = [];
 const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const formProofApiSave = 'https://bright-source-jxr9r.ampt.app/api/recordings'
+const formProofApiSave = 'https://smart-stack-ce8yl.ampt.app/api/recordings'
 let savingLoading = false;
 let record = true;
-
+const sendTfaCode = 'https://smart-stack-ce8yl.ampt.app/api/tfa/sendCode';
+const validateTfCode = 'https://smart-stack-ce8yl.ampt.app/api/tfa/validate';
+const validateBlackList = 'https://smart-stack-ce8yl.ampt.app/api/blacklist';
+const getConfig = `https://smart-stack-ce8yl.ampt.app/api/tokens/token/j57d0zz4tz1fta10wtrmw44fvh6j5fwj/config`;
 
 if (automaticRecord) {
     console.log('formproof start..')
@@ -47,14 +55,15 @@ function formProoftStartRecord() {
 
 addEventListener("submit", async (event) => {
     event.preventDefault();
-    console.log('formproof#onSubmit')
-    if (saveOnSubmit) {
-        console.log('formproof#saving on submit')
-        const data = new FormData(event.target);
-        const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
-        console.log('Record key: ', recordKey)
+    if(tfaTwilio && tfaTwilio === 'true' && blackList){
+        await tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event);
+    } else if (blackList && blackList === 'true') {
+        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event)
+    } else if (tfaTwilio === 'true' && blackList === 'true') {
+        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event)
+    } else {
+        await saveRecording(saveOnSubmit, event)
     }
-    event.target.submit();
 });
 
 async function formproofSaveRecordWithOnsubmitEvent(data) {

@@ -1,38 +1,67 @@
-// liveprint v.1.0.0
-const scriptElement = document.getElementById("blackListPhone");
-if (scriptElement) {
-    const scriptSrc = scriptElement.getAttribute("src");
-    const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
-    inputPhoneId = urlParams.get("inputPhoneId") ? urlParams.get("inputPhoneId") : 'phone';
-} else {
-    console.error("You need add id='blackListPhone' to script")
+async function blackListPhone(tfaTwilio, blackList, phoneInputId, blackList, saveOnSubmit, event) {
+    if (blackList && phoneInputId) {
+        const phone = document.getElementById(phoneInputId).value;
+        if (phone) {
+            showLoading()
+            await validatePhoneInBlackList(tfaTwilio, blackList, phone, saveOnSubmit, event)
+            hideLoading()
+        } else {
+            showPhoneInvalidModal()
+        }
+    }
 }
 
-const phoneInputElement = document.getElementById(inputPhoneId);
-phoneInputElement.addEventListener("blur", function (event) {
-    const phone = event.target.value;
-    if (phone === '0000000000') {
-        const dialog = document.createElement("dialog");
-        dialog.id = "blackListPhoneDialog";
-        dialog.innerHTML = `
-            <h5>Your phone is in blacklist.</h5>
-            <p>Do you want to continue and accept the call?</p>
-            <button id="blackListCancelBTn">No</button>
-            <button id="blackListContinueBTn">Yes</button>
-        `;
-        document.body.appendChild(dialog);
-        const myDialog = document.getElementById("blackListPhoneDialog");
-        myDialog.showModal();
-
-        const continueDialogButton = document.getElementById("blackListContinueBTn");
-        continueDialogButton.addEventListener("click", function () {
-            myDialog.close();
-        });
-
-        const blackListCancelBTn = document.getElementById("blackListCancelBTn");
-        blackListCancelBTn.addEventListener("click", function () {
-            location.reload()
-        });
+async function validatePhoneInBlackList(tfaTwilio, blackList, phone, saveOnSubmit, event) {
+    const response = await fetch(blackList, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({cellphone: phone})
+    });
+    if (response.ok) {
+        const data = await response.json();
+        if (data === true) {
+            if (tfaTwilio === 'true' && tfaTwilio === 'false') {
+                await showTfaModal(phone, event)
+            } else {
+                await saveRecording(saveOnSubmit, event)
+            }
+        } else {
+            await showTfaModal(phone, event)
+        }
     }
-});
+}
 
+// function phoneInBlackList(saveOnSubmit, event) {
+//     const phoneInBlackList = document.createElement("dialog");
+//     phoneInBlackList.id = "phoneInList";
+//     phoneInBlackList.classList.add("dialog-styles");
+//     phoneInBlackList.innerHTML = `
+//                 <button class="x" id="closeBtn">X</button>
+//                 <h5>Black List Verification</h5>
+//                 <p>The following number is blacklisted, do you want to continue?</p>
+//                 <button id="continueBtn" type="submit" style="background: #0b5ed7; color: white;">Continue</button>
+//                 <button id="closePhoneInList" style="margin-right: 10px">Close</button>
+//                             `;
+//     document.body.appendChild(phoneInBlackList);
+//
+//     const  phoneInList = document.getElementById("phoneInList");
+//     phoneInList.showModal();
+//
+//     const closePhoneInList = document.getElementById("closeBtn");
+//     closePhoneInList.addEventListener("click", () => {
+//         phoneInList.close();
+//     });
+//
+//     const closeBlackListModal = document.getElementById("closePhoneInList");
+//     closeBlackListModal.addEventListener("click", () => {
+//         phoneInList.close();
+//     });
+//
+//     const continueBlackListPhone = document.getElementById("continueBtn");
+//     continueBlackListPhone.addEventListener("click", async () => {
+//         await saveRecording(saveOnSubmit, event);
+//     });
+// }
