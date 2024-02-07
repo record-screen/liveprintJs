@@ -1,5 +1,5 @@
-async function getConfigurationByTokenId(getConfig) {
-    await fetch(getConfig, {
+async function getConfigurationByTokenId() {
+    return await fetch(getConfig, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

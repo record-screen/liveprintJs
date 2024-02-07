@@ -1,5 +1,5 @@
 async function validate2faCode(validateTfCode, code, phone) {
-    const codeValid = await fetch(validateTfCode, {
+    return await fetch(validateTfCode, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -7,5 +7,4 @@ async function validate2faCode(validateTfCode, code, phone) {
         },
         body: JSON.stringify({code: code, cellphone: phone})
     });
-    return codeValid;
 }

@@ -1,6 +1,8 @@
 // Reading query params
 const scriptElement = document.getElementById("formproofScript");
 let clientToken = ''
+let apiKey = '';
+let phoneNumber = '';
 let automaticRecord = true;
 let saveOnSubmit = true;
 let keepVideo = false;
@@ -55,11 +57,9 @@ function formProoftStartRecord() {
 
 addEventListener("submit", async (event) => {
     event.preventDefault();
-    if(tfaTwilio && tfaTwilio === 'true' && blackList){
+    if (tfaTwilio && tfaTwilio === 'true' && blackList === 'false'){
         await tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event);
     } else if (blackList && blackList === 'true') {
-        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event)
-    } else if (tfaTwilio === 'true' && blackList === 'true') {
         await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event)
     } else {
         await saveRecording(saveOnSubmit, event)
@@ -82,14 +82,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
-        method: 'POST',
-        body: JSON.stringify(dataSubmit),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
+    const response = await saveRecordings(formProofApiSave, dataSubmit)
     savingLoading = false;
     record = false;
     if (keepVideo) {
@@ -113,14 +106,7 @@ async function formproofSaveRecord(data = {}) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
-        method: 'POST',
-        body: JSON.stringify(dataSubmit),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
+    const response = await saveRecordings(formProofApiSave, dataSubmit)
     savingLoading = false;
     record = false;
     if (keepVideo) {

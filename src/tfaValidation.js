@@ -42,17 +42,13 @@ async function showTfaModal(phone, event) {
                 <h5>Two-Factor Authetication</h5>
                 <p>Enter the code sent to your authentication method or provide a backup code.</p>
                 <b>5-digits code</b>
-                <input type="text" id="code" style="padding: 10px">
+                <input type="text" id="code" style="padding: 10px" maxlength="5">
                 <p id="errorText" style="color: red;"></p>
                 <p id="sendAnother" style="color: cornflowerblue; cursor: pointer;">Resend Code</p>
                 <button id="sendBtn" type="submit" style="background: #0b5ed7; color: white;">Verify</button>
                 <button id="closeTfa" style="margin-right: 10px">Close</button>
                             `;
     document.body.appendChild(tfaDialog);
-
-    // showLoading()
-    // await send2ftaCode(sendTfaCode, phone)
-    // hideLoading()
 
     const tfaModal = document.getElementById("tfaTwilio");
     tfaModal.showModal();
@@ -67,37 +63,43 @@ async function showTfaModal(phone, event) {
         tfaModal.close();
     });
 
-    verifyTfaCode(phone, event)
+    await verifyTfaCode(phone, event)
 }
 
-function verifyTfaCode(phone, event) {
+async function verifyTfaCode(phone, event) {
     const sendAnotherLink = document.getElementById("sendAnother");
+    const config = await getConfigurationByTokenId();
+    const infoConfig =  await config.json();
     sendAnotherLink.addEventListener("click", async () => {
-        await send2ftaCode(sendTfaCode, phone)
+        await send2ftaCode(sendTfaCode, phone, infoConfig.twilio.accountKey, infoConfig.twilio.secretKey, infoConfig.twilio.phone)
         console.log('Code resent');
     });
 
     const sendBtn = document.getElementById("sendBtn");
     sendBtn.addEventListener("click", async () => {
         sendBtn.innerText = "Verifying...";
+        sendBtn.disabled = true;
+
         const errorText = document.getElementById("errorText");
 
         const code = document.getElementById("code").value;
         const codeValid = await validate2faCode(validateTfCode, code, phone)
         console.log(codeValid)
-        if (codeValid.ok === true) {
+        sendBtn.disabled = false;
+
+        if (codeValid.status === 200) {
             console.log('formproof#onSubmit');
             if (saveOnSubmit) {
                 await saveRecording(saveOnSubmit, event)
             }
         } else if (codeValid.status === 409) {
-            ftaCodeUsed()
+            errorText.textContent = "Code used. Please try again."
             sendBtn.innerText = "Verify";
         } else if (codeValid.status === 404) {
             errorText.textContent = "Invalid code. Please try again."
             sendBtn.innerText = "Verify";
         } else {
-            serverError()
+            errorText.textContent = "An unexpected error has occurred, please try again later"
             sendBtn.innerText = "Verify";
         }
     })
@@ -115,26 +117,6 @@ function hideLoading() {
     if (loadingIndicator) {
         loadingIndicator.remove();
     }
-}
-
-function ftaCodeUsed() {
-    const codeUsed = document.createElement("dialog");
-    codeUsed.id = "ftaUVerified";
-    codeUsed.classList.add("dialog-styles");
-    codeUsed.innerHTML = `
-        <button class="x" id="closeFtaUsed">X</button>
-        <h5>Fta Code Verified</h5>
-        <p>This fta code has already been verified, check and try again.</p>
-    `;
-    document.body.appendChild(codeUsed);
-
-    const ftaUVerified = document.getElementById("ftaUVerified");
-    ftaUVerified.showModal();
-
-    const closeFtaUVerified = document.getElementById("closeFtaUsed");
-    closeFtaUVerified.addEventListener("click", () => {
-        ftaUVerified.close();
-    });
 }
 
 function serverError() {
@@ -157,7 +139,7 @@ function serverError() {
     })
 }
 
-function phoneInformationModal(phone, event){
+async function phoneInformationModal(phone, event) {
     const informationPhone = document.createElement("dialog");
     informationPhone.id = "phoneInfo";
     informationPhone.classList.add("dialog-styles");
@@ -181,10 +163,13 @@ function phoneInformationModal(phone, event){
         phoneInfo.close();
     })
 
+    const config = await getConfigurationByTokenId();
+    const infoConfig =  await config.json();
+
     const show2fa = document.getElementById("showTfa");
     show2fa.addEventListener("click",  async () => {
         showLoading()
-        await send2ftaCode(sendTfaCode, phone)
+        await send2ftaCode(sendTfaCode, phone, infoConfig.twilio.accountKey, infoConfig.twilio.secretKey, infoConfig.twilio.phone)
         hideLoading()
         await showTfaModal(phone, event)
     })

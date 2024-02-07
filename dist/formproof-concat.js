@@ -8082,6 +8082,8 @@ var rrweb = (function (exports) {
 // Reading query params
 const scriptElement = document.getElementById("formproofScript");
 let clientToken = ''
+let apiKey = '';
+let phoneNumber = '';
 let automaticRecord = true;
 let saveOnSubmit = true;
 let keepVideo = false;
@@ -8136,11 +8138,9 @@ function formProoftStartRecord() {
 
 addEventListener("submit", async (event) => {
     event.preventDefault();
-    if(tfaTwilio && tfaTwilio === 'true' && blackList){
+    if (tfaTwilio && tfaTwilio === 'true' && blackList === 'false'){
         await tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event);
     } else if (blackList && blackList === 'true') {
-        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event)
-    } else if (tfaTwilio === 'true' && blackList === 'true') {
         await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event)
     } else {
         await saveRecording(saveOnSubmit, event)
@@ -8163,14 +8163,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
-        method: 'POST',
-        body: JSON.stringify(dataSubmit),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
+    const response = await saveRecordings(formProofApiSave, dataSubmit)
     savingLoading = false;
     record = false;
     if (keepVideo) {
@@ -8194,14 +8187,7 @@ async function formproofSaveRecord(data = {}) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
-        method: 'POST',
-        body: JSON.stringify(dataSubmit),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
+    const response = await saveRecordings(formProofApiSave, dataSubmit)
     savingLoading = false;
     record = false;
     if (keepVideo) {
@@ -8254,17 +8240,13 @@ async function showTfaModal(phone, event) {
                 <h5>Two-Factor Authetication</h5>
                 <p>Enter the code sent to your authentication method or provide a backup code.</p>
                 <b>5-digits code</b>
-                <input type="text" id="code" style="padding: 10px">
+                <input type="text" id="code" style="padding: 10px" maxlength="5">
                 <p id="errorText" style="color: red;"></p>
                 <p id="sendAnother" style="color: cornflowerblue; cursor: pointer;">Resend Code</p>
                 <button id="sendBtn" type="submit" style="background: #0b5ed7; color: white;">Verify</button>
                 <button id="closeTfa" style="margin-right: 10px">Close</button>
                             `;
     document.body.appendChild(tfaDialog);
-
-    // showLoading()
-    // await send2ftaCode(sendTfaCode, phone)
-    // hideLoading()
 
     const tfaModal = document.getElementById("tfaTwilio");
     tfaModal.showModal();
@@ -8279,37 +8261,43 @@ async function showTfaModal(phone, event) {
         tfaModal.close();
     });
 
-    verifyTfaCode(phone, event)
+    await verifyTfaCode(phone, event)
 }
 
-function verifyTfaCode(phone, event) {
+async function verifyTfaCode(phone, event) {
     const sendAnotherLink = document.getElementById("sendAnother");
+    const config = await getConfigurationByTokenId();
+    const infoConfig =  await config.json();
     sendAnotherLink.addEventListener("click", async () => {
-        await send2ftaCode(sendTfaCode, phone)
+        await send2ftaCode(sendTfaCode, phone, infoConfig.twilio.accountKey, infoConfig.twilio.secretKey, infoConfig.twilio.phone)
         console.log('Code resent');
     });
 
     const sendBtn = document.getElementById("sendBtn");
     sendBtn.addEventListener("click", async () => {
         sendBtn.innerText = "Verifying...";
+        sendBtn.disabled = true;
+
         const errorText = document.getElementById("errorText");
 
         const code = document.getElementById("code").value;
         const codeValid = await validate2faCode(validateTfCode, code, phone)
         console.log(codeValid)
-        if (codeValid.ok === true) {
+        sendBtn.disabled = false;
+
+        if (codeValid.status === 200) {
             console.log('formproof#onSubmit');
             if (saveOnSubmit) {
                 await saveRecording(saveOnSubmit, event)
             }
         } else if (codeValid.status === 409) {
-            ftaCodeUsed()
+            errorText.textContent = "Code used. Please try again."
             sendBtn.innerText = "Verify";
         } else if (codeValid.status === 404) {
             errorText.textContent = "Invalid code. Please try again."
             sendBtn.innerText = "Verify";
         } else {
-            serverError()
+            errorText.textContent = "An unexpected error has occurred, please try again later"
             sendBtn.innerText = "Verify";
         }
     })
@@ -8327,26 +8315,6 @@ function hideLoading() {
     if (loadingIndicator) {
         loadingIndicator.remove();
     }
-}
-
-function ftaCodeUsed() {
-    const codeUsed = document.createElement("dialog");
-    codeUsed.id = "ftaUVerified";
-    codeUsed.classList.add("dialog-styles");
-    codeUsed.innerHTML = `
-        <button class="x" id="closeFtaUsed">X</button>
-        <h5>Fta Code Verified</h5>
-        <p>This fta code has already been verified, check and try again.</p>
-    `;
-    document.body.appendChild(codeUsed);
-
-    const ftaUVerified = document.getElementById("ftaUVerified");
-    ftaUVerified.showModal();
-
-    const closeFtaUVerified = document.getElementById("closeFtaUsed");
-    closeFtaUVerified.addEventListener("click", () => {
-        ftaUVerified.close();
-    });
 }
 
 function serverError() {
@@ -8369,7 +8337,7 @@ function serverError() {
     })
 }
 
-function phoneInformationModal(phone, event){
+async function phoneInformationModal(phone, event) {
     const informationPhone = document.createElement("dialog");
     informationPhone.id = "phoneInfo";
     informationPhone.classList.add("dialog-styles");
@@ -8393,10 +8361,13 @@ function phoneInformationModal(phone, event){
         phoneInfo.close();
     })
 
+    const config = await getConfigurationByTokenId();
+    const infoConfig =  await config.json();
+
     const show2fa = document.getElementById("showTfa");
     show2fa.addEventListener("click",  async () => {
         showLoading()
-        await send2ftaCode(sendTfaCode, phone)
+        await send2ftaCode(sendTfaCode, phone, infoConfig.twilio.accountKey, infoConfig.twilio.secretKey, infoConfig.twilio.phone)
         hideLoading()
         await showTfaModal(phone, event)
     })
@@ -8417,7 +8388,7 @@ async function saveRecording(saveOnSubmit, event) {
     event.target.submit();
 }
 
-async function blackListPhone(tfaTwilio, blackList, phoneInputId, blackList, saveOnSubmit, event) {
+async function blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event) {
     if (blackList && phoneInputId) {
         const phone = document.getElementById(phoneInputId).value;
         if (phone) {
@@ -8430,76 +8401,32 @@ async function blackListPhone(tfaTwilio, blackList, phoneInputId, blackList, sav
     }
 }
 
-async function validatePhoneInBlackList(tfaTwilio, blackList, phone, saveOnSubmit, event) {
-    const response = await fetch(blackList, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        body: JSON.stringify({cellphone: phone})
-    });
-    if (response.ok) {
-        const data = await response.json();
-        if (data === true) {
-            if (tfaTwilio === 'true' && tfaTwilio === 'false') {
-                await showTfaModal(phone, event)
-            } else {
-                await saveRecording(saveOnSubmit, event)
-            }
-        } else {
-            await showTfaModal(phone, event)
-        }
+async function validatePhoneInBlackList(tfaTwilio, validateBlackList, phone, saveOnSubmit, event) {
+    const token = "j57dmdn2y67071g22fs41v5c5s6hm3ct";
+    const verifyPhone = await verifyPhoneBlackListApi(phone, token);
+    const verify = await verifyPhone.json();
+    if (verify.valid === true && verify.showTfa === true) {
+        await phoneInformationModal(phone, event)
+    } else if (verify.valid === false && verify.showTfa === true) {
+        await phoneInformationModal(phone, event)
+    } else if (verify.valid === true && verify.showTfa === false) {
+        await saveRecording(saveOnSubmit, event)
     }
 }
 
-// function phoneInBlackList(saveOnSubmit, event) {
-//     const phoneInBlackList = document.createElement("dialog");
-//     phoneInBlackList.id = "phoneInList";
-//     phoneInBlackList.classList.add("dialog-styles");
-//     phoneInBlackList.innerHTML = `
-//                 <button class="x" id="closeBtn">X</button>
-//                 <h5>Black List Verification</h5>
-//                 <p>The following number is blacklisted, do you want to continue?</p>
-//                 <button id="continueBtn" type="submit" style="background: #0b5ed7; color: white;">Continue</button>
-//                 <button id="closePhoneInList" style="margin-right: 10px">Close</button>
-//                             `;
-//     document.body.appendChild(phoneInBlackList);
-//
-//     const  phoneInList = document.getElementById("phoneInList");
-//     phoneInList.showModal();
-//
-//     const closePhoneInList = document.getElementById("closeBtn");
-//     closePhoneInList.addEventListener("click", () => {
-//         phoneInList.close();
-//     });
-//
-//     const closeBlackListModal = document.getElementById("closePhoneInList");
-//     closeBlackListModal.addEventListener("click", () => {
-//         phoneInList.close();
-//     });
-//
-//     const continueBlackListPhone = document.getElementById("continueBtn");
-//     continueBlackListPhone.addEventListener("click", async () => {
-//         await saveRecording(saveOnSubmit, event);
-//     });
-// }
-
-async function send2ftaCode(sendTfaCode, phone) {
-    showLoading()
-    await fetch(sendTfaCode, {
+async function send2ftaCode(sendTfaCode, phone, sid, secretKey, from) {
+    return await fetch(sendTfaCode, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },
-        body: JSON.stringify({cellphone: phone})
+        body: JSON.stringify({cellphone: phone, sid: sid, secretKey: secretKey, from: from})
     });
-    hideLoading()
 }
 
 async function validate2faCode(validateTfCode, code, phone) {
-    const codeValid = await fetch(validateTfCode, {
+    return await fetch(validateTfCode, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -8507,5 +8434,36 @@ async function validate2faCode(validateTfCode, code, phone) {
         },
         body: JSON.stringify({code: code, cellphone: phone})
     });
-    return codeValid;
+}
+
+async function verifyPhoneBlackListApi(phone, token) {
+    return await fetch(validateBlackList, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({cellphone: phone, token: token})
+    });
+}
+
+async function getConfigurationByTokenId() {
+    return await fetch(getConfig, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+    });
+}
+
+async function saveRecordings(formProofApiSave, dataSubmit) {
+    return await fetch(formProofApiSave, {
+        method: 'POST',
+        body: JSON.stringify(dataSubmit),
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        }
+    });
 }
