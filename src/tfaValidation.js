@@ -1,16 +1,19 @@
 async function tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event) {
-    if (tfaTwilio && phoneInputId) {
-        const phone = document.getElementById(phoneInputId).value;
-        if (phone) {
-            showLoading()
-            phoneInformationModal(phone, event)
-            hideLoading()
-           } else {
-               serverError()
-           }
-        } else {
-           showPhoneInvalidModal()
-        }
+    if (!tfaTwilio || !phoneInputId) {
+        showServerErrorModal();
+        return;
+    }
+    const phoneInput = document.getElementById(phoneInputId);
+    if (!phoneInput) {
+        showServerErrorModal();
+        return;
+    }
+    const phone = phoneInput.value;
+    if (!phone || !regex.test(phone)) {
+        showPhoneInvalidModal();
+        return;
+    }
+    await phoneInformationModal(phone, event);
 }
 
 function showPhoneInvalidModal() {
@@ -55,11 +58,15 @@ async function showTfaModal(phone, event) {
 
     const closeTfaDialog = document.getElementById("closeBtn");
     closeTfaDialog.addEventListener("click", () => {
+        const phoneInfo = document.getElementById("phoneInfo");
+        phoneInfo.close();
         tfaModal.close();
     });
 
     const closeTfa = document.getElementById("closeTfa");
     closeTfa.addEventListener("click", () => {
+        const phoneInfo = document.getElementById("phoneInfo");
+        phoneInfo.close();
         tfaModal.close();
     });
 
@@ -68,10 +75,8 @@ async function showTfaModal(phone, event) {
 
 async function verifyTfaCode(phone, event) {
     const sendAnotherLink = document.getElementById("sendAnother");
-    const config = await getConfigurationByTokenId();
-    const infoConfig =  await config.json();
     sendAnotherLink.addEventListener("click", async () => {
-        await send2ftaCode(sendTfaCode, phone, infoConfig.twilio.accountKey, infoConfig.twilio.secretKey, infoConfig.twilio.phone)
+        await send2faCode(phone, clientToken)
         console.log('Code resent');
     });
 
@@ -79,14 +84,11 @@ async function verifyTfaCode(phone, event) {
     sendBtn.addEventListener("click", async () => {
         sendBtn.innerText = "Verifying...";
         sendBtn.disabled = true;
-
         const errorText = document.getElementById("errorText");
-
         const code = document.getElementById("code").value;
-        const codeValid = await validate2faCode(validateTfCode, code, phone)
+        const codeValid = await validate2faCode(code, phone)
         console.log(codeValid)
         sendBtn.disabled = false;
-
         if (codeValid.status === 200) {
             console.log('formproof#onSubmit');
             if (saveOnSubmit) {
@@ -119,7 +121,7 @@ function hideLoading() {
     }
 }
 
-function serverError() {
+function showServerErrorModal() {
     const ftaCodeError = document.createElement("dialog");
     ftaCodeError.id = "ftaCodeError";
     ftaCodeError.classList.add("dialog-styles");
@@ -147,6 +149,7 @@ async function phoneInformationModal(phone, event) {
         <button class="x" id="closeInfoPhone">X</button>
         <p>We need to validate your identity, we will send a validation code to the following cell phone number</p>
         <b id="cellphone" style=""></b>
+        <span id="errorText" style="color: red; display: none;">Phone number not found or not valid.</span>
         <button id="showTfa" style="background: #0b5ed7; color: white;">Continue</button>
         <button id="closePhone" style="margin-right: 10px">Close</button>
     `;
@@ -163,15 +166,19 @@ async function phoneInformationModal(phone, event) {
         phoneInfo.close();
     })
 
-    const config = await getConfigurationByTokenId();
-    const infoConfig =  await config.json();
-
     const show2fa = document.getElementById("showTfa");
     show2fa.addEventListener("click",  async () => {
-        showLoading()
-        await send2ftaCode(sendTfaCode, phone, infoConfig.twilio.accountKey, infoConfig.twilio.secretKey, infoConfig.twilio.phone)
-        hideLoading()
-        await showTfaModal(phone, event)
+        show2fa.innerText = "Verifying...";
+        show2fa.disable = true;
+        const response = await send2faCode(phone, clientToken)
+        if (response.status === 200 ) {
+            await showTfaModal(phone, event)
+        } else if (response.status === 404) {
+            document.getElementById('errorText').style.display = 'block';
+            show2fa.style.display = 'none';
+        } else if (response.status === 500) {
+            showServerErrorModal()
+        }
     })
 
     const closePhoneModal = document.getElementById("closePhone");

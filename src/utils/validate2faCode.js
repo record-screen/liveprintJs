@@ -1,5 +1,5 @@
-async function validate2faCode(validateTfCode, code, phone) {
-    return await fetch(validateTfCode, {
+async function validate2faCode(code, phone) {
+    return await fetch(validateTfCodeApi, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
-async function verifyPhoneBlackListApi(phone, token) {
-    return await fetch(validateBlackListApi, {
+async function send2faCode(phone, token) {
+    return await fetch(sendTfaCodeApi, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

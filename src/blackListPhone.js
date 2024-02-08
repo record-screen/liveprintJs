@@ -1,19 +1,20 @@
 async function blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event) {
-    if (blackList && phoneInputId) {
-        const phone = document.getElementById(phoneInputId).value;
-        if (phone) {
-            showLoading()
-            await validatePhoneInBlackList(tfaTwilio, blackList, phone, saveOnSubmit, event)
-            hideLoading()
-        } else {
-            showPhoneInvalidModal()
-        }
+    if (!blackList || !phoneInputId) return;
+    const phoneInput = document.getElementById(phoneInputId);
+    if (!phoneInput) return;
+    const phone = phoneInput.value;
+    if (!phone || !regex.test(phone)) {
+        showPhoneInvalidModal();
+        return;
     }
+    showLoading()
+    await validatePhoneInBlackList(tfaTwilio, blackList, phone, saveOnSubmit, event);
+    hideLoading()
 }
 
+
 async function validatePhoneInBlackList(tfaTwilio, validateBlackList, phone, saveOnSubmit, event) {
-    const token = "j57dmdn2y67071g22fs41v5c5s6hm3ct";
-    const verifyPhone = await verifyPhoneBlackListApi(phone, token);
+    const verifyPhone = await verifyPhoneBlackListApi(phone, clientToken)
     const verify = await verifyPhone.json();
     if (verify.valid === true && verify.showTfa === true) {
         await phoneInformationModal(phone, event)
