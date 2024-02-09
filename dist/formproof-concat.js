@@ -8286,7 +8286,6 @@ async function verifyTfaCode(phone, event) {
         const errorText = document.getElementById("errorText");
         const code = document.getElementById("code").value;
         const codeValid = await validate2faCode(code, phone)
-        console.log(codeValid)
         sendBtn.disabled = false;
         if (codeValid.status === 200) {
             console.log('formproof#onSubmit');
@@ -8336,6 +8335,8 @@ function showServerErrorModal() {
 
     const closeFtaError = document.getElementById("closeFtaError");
     closeFtaError.addEventListener("click", () => {
+        const phoneInfo = document.getElementById("phoneInfo");
+        phoneInfo.close();
         ftaError.close();
     })
 }
@@ -8372,12 +8373,13 @@ async function phoneInformationModal(phone, event) {
         const response = await send2faCode(phone, clientToken)
         if (response.status === 200 ) {
             await showTfaModal(phone, event)
-        } else if (response.status === 404) {
+        } else if (response.status === 404 || response.status === 400) {
             document.getElementById('errorText').style.display = 'block';
             show2fa.style.display = 'none';
         } else if (response.status === 500) {
             showServerErrorModal()
         }
+
     })
 
     const closePhoneModal = document.getElementById("closePhone");
