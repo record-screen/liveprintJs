@@ -8085,12 +8085,21 @@ let clientToken = ''
 let automaticRecord = true;
 let saveOnSubmit = true;
 let keepVideo = false;
+let tfaTwilio = false;
+let blackList = false;
+let phoneInputId = ''
+let baseApi = 'https://bright-source-jxr9r.ampt.app/api'
+let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
+
 
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
     clientToken = urlParams.get("clientToken");
+    phoneInputId = urlParams.get("phoneInputId");
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
+    tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
+    blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
     saveOnSubmit = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
 } else {
     console.error("You need add id='formproofScript' to script")
@@ -8099,10 +8108,12 @@ const events = [];
 const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const formProofApiSave = 'https://bright-source-jxr9r.ampt.app/api/recordings'
+const formProofApiSave = `${baseApi}/recordings`;
 let savingLoading = false;
 let record = true;
-
+const sendTfaCodeApi = `${baseApi}/tfa/sendCode`;
+const validateTfCodeApi = `${baseApi}/tfa/validate`;
+const validateBlackListApi = `${baseApi}/blacklist`;
 
 if (automaticRecord) {
     console.log('formproof start..')
@@ -8128,14 +8139,13 @@ function formProoftStartRecord() {
 
 addEventListener("submit", async (event) => {
     event.preventDefault();
-    console.log('formproof#onSubmit')
-    if (saveOnSubmit) {
-        console.log('formproof#saving on submit')
-        const data = new FormData(event.target);
-        const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
-        console.log('Record key: ', recordKey)
+    if (tfaTwilio && tfaTwilio === 'true' && blackList === 'false') {
+        await tfaValidation(tfaTwilio, phoneInputId, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit, event);
+    } else if (blackList && blackList === 'true') {
+        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackListApi, saveOnSubmit, event)
+    } else {
+        await saveRecording(saveOnSubmit, event)
     }
-    event.target.submit();
 });
 
 async function formproofSaveRecordWithOnsubmitEvent(data) {
@@ -8154,14 +8164,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
-        method: 'POST',
-        body: JSON.stringify(dataSubmit),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
+    const response = await saveRecordings(dataSubmit)
     savingLoading = false;
     record = false;
     if (keepVideo) {
@@ -8185,7 +8188,276 @@ async function formproofSaveRecord(data = {}) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
+    const response = await saveRecordings(dataSubmit)
+    savingLoading = false;
+    record = false;
+    if (keepVideo) {
+        localStorage.removeItem(storageRecord);
+    }
+    return await response.json();
+}
+
+async function tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event) {
+    if (!tfaTwilio || !phoneInputId) {
+        showServerErrorModal();
+        return;
+    }
+    const phoneInput = document.getElementById(phoneInputId);
+    if (!phoneInput) {
+        showServerErrorModal();
+        return;
+    }
+    const phone = phoneInput.value;
+    if (!phone || !regex.test(phone)) {
+        showPhoneInvalidModal();
+        return;
+    }
+    await phoneInformationModal(phone, event);
+}
+
+function showPhoneInvalidModal() {
+    const phoneInvalid = document.createElement("dialog");
+    phoneInvalid.id = "invalidPhone";
+    phoneInvalid.classList.add("dialog-styles");
+    phoneInvalid.innerHTML = `
+                <button class="x" id="closePhoneModal">X</button>
+                <h5>Invalid Phone</h5>
+                <p>Please enter a valid phone number</p>
+`;
+    document.body.appendChild(phoneInvalid);
+
+    const phoneInvalidDialog = document.getElementById("invalidPhone");
+    phoneInvalidDialog.showModal();
+
+    const closeModalPhone = document.getElementById("closePhoneModal");
+    closeModalPhone.addEventListener("click", () => {
+        phoneInvalidDialog.close();
+    });
+}
+
+async function showTfaModal(phone, event) {
+    const tfaDialog = document.createElement("dialog");
+    tfaDialog.id = "tfaTwilio";
+    tfaDialog.classList.add("dialog-styles");
+    tfaDialog.innerHTML = `
+                <button class="x" id="closeBtn">X</button>
+                <h5>Two-Factor Authetication</h5>
+                <p>Enter the code sent to your authentication method or provide a backup code.</p>
+                <b>5-digits code</b>
+                <input type="text" id="code" style="padding: 10px" maxlength="5">
+                <p id="errorText" style="color: red;"></p>
+                <p id="sendAnother" style="color: cornflowerblue; cursor: pointer;">Resend Code</p>
+                <button id="sendBtn" type="submit" style="background: #0b5ed7; color: white;">Verify</button>
+                <button id="closeTfa" style="margin-right: 10px">Close</button>
+                            `;
+    document.body.appendChild(tfaDialog);
+
+    const tfaModal = document.getElementById("tfaTwilio");
+    tfaModal.showModal();
+
+    const closeTfaDialog = document.getElementById("closeBtn");
+    closeTfaDialog.addEventListener("click", () => {
+        const phoneInfo = document.getElementById("phoneInfo");
+        phoneInfo.close();
+        tfaModal.close();
+    });
+
+    const closeTfa = document.getElementById("closeTfa");
+    closeTfa.addEventListener("click", () => {
+        const phoneInfo = document.getElementById("phoneInfo");
+        phoneInfo.close();
+        tfaModal.close();
+    });
+
+    await verifyTfaCode(phone, event)
+}
+
+async function verifyTfaCode(phone, event) {
+    const sendAnotherLink = document.getElementById("sendAnother");
+    sendAnotherLink.addEventListener("click", async () => {
+        await send2faCode(phone, clientToken)
+        console.log('Code resent');
+    });
+
+    const sendBtn = document.getElementById("sendBtn");
+    sendBtn.addEventListener("click", async () => {
+        sendBtn.innerText = "Verifying...";
+        sendBtn.disabled = true;
+        const errorText = document.getElementById("errorText");
+        const code = document.getElementById("code").value;
+        const codeValid = await validate2faCode(code, phone)
+        console.log(codeValid)
+        sendBtn.disabled = false;
+        if (codeValid.status === 200) {
+            console.log('formproof#onSubmit');
+            if (saveOnSubmit) {
+                await saveRecording(saveOnSubmit, event)
+            }
+        } else if (codeValid.status === 409) {
+            errorText.textContent = "Code used. Please try again."
+            sendBtn.innerText = "Verify";
+        } else if (codeValid.status === 404) {
+            errorText.textContent = "Invalid code. Please try again."
+            sendBtn.innerText = "Verify";
+        } else {
+            errorText.textContent = "An unexpected error has occurred, please try again later"
+            sendBtn.innerText = "Verify";
+        }
+    })
+}
+
+function showLoading() {
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'loadingIndicator';
+    loadingIndicator.innerHTML = '<div class="loader"></div>';
+    document.body.appendChild(loadingIndicator);
+}
+
+function hideLoading() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
+    }
+}
+
+function showServerErrorModal() {
+    const ftaCodeError = document.createElement("dialog");
+    ftaCodeError.id = "ftaCodeError";
+    ftaCodeError.classList.add("dialog-styles");
+    ftaCodeError.innerHTML = `
+        <button class="x" id="closeFtaError">X</button>
+        <h5>Internal Server Error</h5>
+        <p>An unexpected error has occurred, please try again later</p>
+    `;
+    document.body.appendChild(ftaCodeError);
+
+    const ftaError = document.getElementById("ftaCodeError");
+    ftaError.showModal();
+
+    const closeFtaError = document.getElementById("closeFtaError");
+    closeFtaError.addEventListener("click", () => {
+        ftaError.close();
+    })
+}
+
+async function phoneInformationModal(phone, event) {
+    const informationPhone = document.createElement("dialog");
+    informationPhone.id = "phoneInfo";
+    informationPhone.classList.add("dialog-styles");
+    informationPhone.innerHTML = `
+        <button class="x" id="closeInfoPhone">X</button>
+        <p>We need to validate your identity, we will send a validation code to the following cell phone number</p>
+        <b id="cellphone" style=""></b>
+        <span id="errorText" style="color: red; display: none;">Phone number not found or not valid.</span>
+        <button id="showTfa" style="background: #0b5ed7; color: white;">Continue</button>
+        <button id="closePhone" style="margin-right: 10px">Close</button>
+    `;
+    document.body.appendChild(informationPhone);
+
+    document.getElementById('cellphone').textContent = phone;
+    document.getElementById('cellphone').style.fontSize = '28px';
+
+    const phoneInfo = document.getElementById("phoneInfo");
+    phoneInfo.showModal();
+
+    const closePhoneInfo = document.getElementById("closeInfoPhone");
+    closePhoneInfo.addEventListener("click", () => {
+        phoneInfo.close();
+    })
+
+    const show2fa = document.getElementById("showTfa");
+    show2fa.addEventListener("click",  async () => {
+        show2fa.innerText = "Verifying...";
+        show2fa.disable = true;
+        const response = await send2faCode(phone, clientToken)
+        if (response.status === 200 ) {
+            await showTfaModal(phone, event)
+        } else if (response.status === 404) {
+            document.getElementById('errorText').style.display = 'block';
+            show2fa.style.display = 'none';
+        } else if (response.status === 500) {
+            showServerErrorModal()
+        }
+    })
+
+    const closePhoneModal = document.getElementById("closePhone");
+    closePhoneModal.addEventListener("click", () => {
+        phoneInfo.close();
+    });
+}
+
+async function saveRecording(saveOnSubmit, event) {
+    if (saveOnSubmit) {
+        console.log('formproof#saving on submit');
+        const data = new FormData(event.target);
+        const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
+        console.log('Record key: ', recordKey)
+    }
+    event.target.submit();
+}
+
+async function blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event) {
+    if (!blackList || !phoneInputId) return;
+    const phoneInput = document.getElementById(phoneInputId);
+    if (!phoneInput) return;
+    const phone = phoneInput.value;
+    if (!phone || !regex.test(phone)) {
+        showPhoneInvalidModal();
+        return;
+    }
+    showLoading()
+    await validatePhoneInBlackList(tfaTwilio, blackList, phone, saveOnSubmit, event);
+    hideLoading()
+}
+
+
+async function validatePhoneInBlackList(tfaTwilio, validateBlackList, phone, saveOnSubmit, event) {
+    const verifyPhone = await verifyPhoneBlackListApi(phone, clientToken)
+    const verify = await verifyPhone.json();
+    if (verify.valid === true && verify.showTfa === true) {
+        await phoneInformationModal(phone, event)
+    } else if (verify.valid === false && verify.showTfa === true) {
+        await phoneInformationModal(phone, event)
+    } else if (verify.valid === true && verify.showTfa === false) {
+        await saveRecording(saveOnSubmit, event)
+    }
+}
+
+async function send2faCode(phone, token) {
+    return await fetch(sendTfaCodeApi, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({cellphone: phone, token: token})
+    });
+}
+
+async function validate2faCode(code, phone) {
+    return await fetch(validateTfCodeApi, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({code: code, cellphone: phone})
+    });
+}
+
+async function verifyPhoneBlackListApi(phone, token) {
+    return await fetch(validateBlackListApi, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({cellphone: phone, token: token})
+    });
+}
+
+async function saveRecordings(dataSubmit) {
+    return await fetch(formProofApiSave, {
         method: 'POST',
         body: JSON.stringify(dataSubmit),
         headers: {
@@ -8193,10 +8465,4 @@ async function formproofSaveRecord(data = {}) {
             'Access-Control-Allow-Origin': '*'
         }
     });
-    savingLoading = false;
-    record = false;
-    if (keepVideo) {
-        localStorage.removeItem(storageRecord);
-    }
-    return await response.json();
 }

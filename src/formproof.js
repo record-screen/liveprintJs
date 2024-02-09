@@ -4,12 +4,21 @@ let clientToken = ''
 let automaticRecord = true;
 let saveOnSubmit = true;
 let keepVideo = false;
+let tfaTwilio = false;
+let blackList = false;
+let phoneInputId = ''
+let baseApi = 'https://bright-source-jxr9r.ampt.app/api'
+let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
+
 
 if (scriptElement) {
     const scriptSrc = scriptElement.getAttribute("src");
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
     clientToken = urlParams.get("clientToken");
+    phoneInputId = urlParams.get("phoneInputId");
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
+    tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
+    blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
     saveOnSubmit = urlParams.get("saveOnSubmit") ? urlParams.get("saveOnSubmit") : true;
 } else {
     console.error("You need add id='formproofScript' to script")
@@ -18,10 +27,12 @@ const events = [];
 const storageRecord = 'FORMPROOF_EVENTS';
 let pathNamePage = window.location.pathname;
 let eventsToSave = {};
-const formProofApiSave = 'https://bright-source-jxr9r.ampt.app/api/recordings'
+const formProofApiSave = `${baseApi}/recordings`;
 let savingLoading = false;
 let record = true;
-
+const sendTfaCodeApi = `${baseApi}/tfa/sendCode`;
+const validateTfCodeApi = `${baseApi}/tfa/validate`;
+const validateBlackListApi = `${baseApi}/blacklist`;
 
 if (automaticRecord) {
     console.log('formproof start..')
@@ -47,14 +58,13 @@ function formProoftStartRecord() {
 
 addEventListener("submit", async (event) => {
     event.preventDefault();
-    console.log('formproof#onSubmit')
-    if (saveOnSubmit) {
-        console.log('formproof#saving on submit')
-        const data = new FormData(event.target);
-        const recordKey = await formproofSaveRecordWithOnsubmitEvent(data);
-        console.log('Record key: ', recordKey)
+    if (tfaTwilio && tfaTwilio === 'true' && blackList === 'false') {
+        await tfaValidation(tfaTwilio, phoneInputId, sendTfaCodeApi, validateTfCodeApi, saveOnSubmit, event);
+    } else if (blackList && blackList === 'true') {
+        await blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackListApi, saveOnSubmit, event)
+    } else {
+        await saveRecording(saveOnSubmit, event)
     }
-    event.target.submit();
 });
 
 async function formproofSaveRecordWithOnsubmitEvent(data) {
@@ -73,14 +83,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
-        method: 'POST',
-        body: JSON.stringify(dataSubmit),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
+    const response = await saveRecordings(dataSubmit)
     savingLoading = false;
     record = false;
     if (keepVideo) {
@@ -104,14 +107,7 @@ async function formproofSaveRecord(data = {}) {
         userAgent,
         clientToken: clientToken ? clientToken : ''
     };
-    const response = await fetch(formProofApiSave, {
-        method: 'POST',
-        body: JSON.stringify(dataSubmit),
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-    });
+    const response = await saveRecordings(dataSubmit)
     savingLoading = false;
     record = false;
     if (keepVideo) {

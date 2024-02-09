@@ -11,7 +11,8 @@ function installDependencies(cb) {
 
 function build(cb) {
     console.log('Build')
-    gulp.src(['node_modules/rrweb/dist/rrweb.js', 'src/formproof.js'])
+    gulp.src(['node_modules/rrweb/dist/rrweb.js', 'src/formproof.js', 'src/tfaValidation.js', 'src/saveRecording.js', 'src/blackListPhone.js', 'src/utils/send2faCode.js', "src/utils/validate2faCode.js",
+    "src/utils/verifyPhoneBlackListApi.js", "src/utils/saveRecordings.js"])
         .pipe(gp_concat('formproof-concat.js'))
         .pipe(gulp.dest('dist'))
         .pipe(gp_rename('formproof.js'))
@@ -32,7 +33,8 @@ function buildBlackList(cb) {
 }
 
 function watch() {
-    gulp.watch(['src/formproof.js'], build);
+    gulp.watch(['src/formproof.js', 'src/tfaValidation.js', 'src/saveRecording.js', 'src/blackListPhone.js', 'src/utils/send2faCode.js', 'src/utils/validate2faCode.js', "src/utils/verifyPhoneBlackListApi.js",
+        "src/utils/saveRecordings.js"], build);
 }
 
 function watchBuildBlackList() {
