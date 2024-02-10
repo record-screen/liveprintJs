@@ -78,4 +78,5 @@ exports.watch = watch;
 exports.watchBuildBlackList = watchBuildBlackList;
 
 exports.default = series(build);
+exports.default = series(buildStaging);
 exports.default = series(buildBlackList);
