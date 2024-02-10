@@ -8170,6 +8170,7 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     if (keepVideo) {
         localStorage.removeItem(storageRecord);
     }
+
     return await response.json();
 }
 
