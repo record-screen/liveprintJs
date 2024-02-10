@@ -1,4 +1,4 @@
-name: Build
+name: Build and Deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - test  # Change this to your main branch name
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18'  # Change this to your Node.js version
+          node-version: '14'  # Change this to your Node.js version
 
       - name: Install Gulp
         run: npm install gulp-cli -g
@@ -27,12 +27,11 @@ jobs:
       - name: Build for local environment
         run: gulp buildStaging
 
-      - name: Commit build result
-        run: |
-          git config --global user.name "Marco Morales"
-          git config --global user.email "marcoa.morales.pe@gmail.com"
-          git add dist/*  # Adjust this path to match your build output directory
-          git commit -m "Build for local environment"
-          git push
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          branch: test  # Change this to the branch you want to deploy to
+          folder: dist      # Change this to the directory containing your built files
+          clean: true       # Optional: Set to true to clean the target branch before deployment
 
       # Add more steps as needed for staging and production builds
