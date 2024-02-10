@@ -30,6 +30,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
+          token: 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
           branch: test  # Change this to the branch you want to deploy to
           folder: dist      # Change this to the directory containing your built files
           clean: true       # Optional: Set to true to clean the target branch before deployment
