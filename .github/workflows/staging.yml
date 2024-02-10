@@ -25,7 +25,7 @@ jobs:
         run: npm install
 
       - name: Build for local environment
-        run: gulp buildLocal
+        run: gulp buildStaging
 
       - name: Commit build result
         run: |

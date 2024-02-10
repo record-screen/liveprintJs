@@ -76,10 +76,8 @@ exports.buildProduction = buildProduction;
 exports.buildBlackList = buildBlackList;
 exports.watch = watch;
 exports.watchBuildBlackList = watchBuildBlackList;
-exports.replaceTemplate = replaceTemplate;
 
 exports.default = series(build);
 exports.default = series(buildStaging);
 exports.default = series(buildProduction);
 exports.default = series(buildBlackList);
-exports.default = series(replaceTemplate);
