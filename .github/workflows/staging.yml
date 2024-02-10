@@ -1,25 +1,38 @@
-name: Deploy to Staging
+name: Build
 
 on:
   push:
     branches:
-      - test
+      - test  # Change this to your main branch name
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Setup Node.js environment
+      - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '18'
+          node-version: '18'  # Change this to your Node.js version
+
+      - name: Install Gulp
+        run: npm install gulp-cli -g
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build for Staging
-        run: gulp buildStaging
+      - name: Build for local environment
+        run: gulp buildLocal
+
+      - name: Commit build result
+        run: |
+          git config --global user.name "Your Name"
+          git config --global user.email "youremail@example.com"
+          git add dist/*  # Adjust this path to match your build output directory
+          git commit -m "Build for local environment"
+          git push
+
+      # Add more steps as needed for staging and production builds
