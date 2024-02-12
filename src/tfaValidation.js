@@ -76,7 +76,7 @@ async function showTfaModal(phone, event) {
 async function verifyTfaCode(phone, event) {
     const sendAnotherLink = document.getElementById("sendAnother");
     sendAnotherLink.addEventListener("click", async () => {
-        await send2faCode(phone, clientToken)
+        await send2faCode(phone, clientToken);
         console.log('Code resent');
     });
 
@@ -86,24 +86,24 @@ async function verifyTfaCode(phone, event) {
         sendBtn.disabled = true;
         const errorText = document.getElementById("errorText");
         const code = document.getElementById("code").value;
-        const codeValid = await validate2faCode(code, phone)
+        const codeValid = await validate2faCode(code, phone);
         sendBtn.disabled = false;
         if (codeValid.status === 200) {
             console.log('formproof#onSubmit');
             if (saveOnSubmit) {
-                await saveRecording(saveOnSubmit, event)
+                await saveRecording(saveOnSubmit, event);
             }
         } else if (codeValid.status === 409) {
-            errorText.textContent = "Code used. Please try again."
+            errorText.textContent = "Code used. Please try again.";
             sendBtn.innerText = "Verify";
         } else if (codeValid.status === 404) {
-            errorText.textContent = "Invalid code. Please try again."
+            errorText.textContent = "Invalid code. Please try again.";
             sendBtn.innerText = "Verify";
         } else {
-            errorText.textContent = "An unexpected error has occurred, please try again later"
+            errorText.textContent = "An unexpected error has occurred, please try again later.";
             sendBtn.innerText = "Verify";
         }
-    })
+    });
 }
 
 function showLoading() {
