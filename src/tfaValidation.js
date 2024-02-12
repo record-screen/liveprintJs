@@ -103,7 +103,6 @@ async function verifyTfaCode(phone, event) {
             errorText.textContent = "An unexpected error has occurred, please try again later.";
             sendBtn.innerText = "Verify";
         }
-        errorText.style.display = "block";
     });
 }
 
