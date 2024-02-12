@@ -1,7 +1,9 @@
 async function blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event) {
-    if (!blackList || !phoneInputId) return;
     const phoneInput = document.getElementById(phoneInputId);
-    if (!phoneInput) return;
+    if (!phoneInput) {
+        inputIdNoExist();
+        return;
+    }
     const phone = phoneInput.value;
     if (!phone || !regex.test(phone)) {
         showPhoneInvalidModal();

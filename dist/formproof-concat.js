@@ -8198,13 +8198,9 @@ async function formproofSaveRecord(data = {}) {
 }
 
 async function tfaValidation(tfaTwilio, phoneInputId, sendTfaCode, validateTfCode, saveOnSubmit, event) {
-    if (!tfaTwilio || !phoneInputId) {
-        showServerErrorModal();
-        return;
-    }
     const phoneInput = document.getElementById(phoneInputId);
     if (!phoneInput) {
-        showServerErrorModal();
+        inputIdNoExist();
         return;
     }
     const phone = phoneInput.value;
@@ -8338,10 +8334,36 @@ function showServerErrorModal() {
     ftaError.showModal();
 
     const closeFtaError = document.getElementById("closeFtaError");
-    closeFtaError.addEventListener("click", () => {
-        const phoneInfo = document.getElementById("phoneInfo");
-        phoneInfo.close();
+    closeFtaError.addEventListener("click", async () => {
+        const show2fa = document.getElementById("showTfa");
+        show2fa.innerText = "Continue";
         ftaError.close();
+    })
+}
+
+function inputIdNoExist () {
+    const inputIdError = document.createElement("dialog");
+    inputIdError.id = "inputIdError";
+    inputIdError.classList.add("dialog-styles");
+    inputIdError.innerHTML = `
+        <button class="x" id="closeInputIdError">X</button>
+        <h5>Error in phoneInputId</h5>
+        <p>Please verify that the phoneInputId exists</p>
+        <button id="close"  style="background: #0b5ed7; color: white;">Ok</button>
+    `;
+    document.body.appendChild(inputIdError);
+
+    const showErrorInputModal = document.getElementById("inputIdError")
+    showErrorInputModal.showModal();
+
+    const closeInputIdError = document.getElementById("closeInputIdError");
+    closeInputIdError.addEventListener("click", () => {
+        showErrorInputModal.close()
+    })
+
+    const inputIdErrorModal = document.getElementById("close");
+    inputIdErrorModal.addEventListener("click", () => {
+        showErrorInputModal.close()
     })
 }
 
@@ -8372,7 +8394,7 @@ async function phoneInformationModal(phone, event) {
 
     const show2fa = document.getElementById("showTfa");
     show2fa.addEventListener("click",  async () => {
-        show2fa.innerText = "Sending Code..";
+        show2fa.innerText = "Sending Code...";
         show2fa.disable = true;
         const response = await send2faCode(phone, clientToken)
         if (response.status === 200 ) {
@@ -8403,9 +8425,11 @@ async function saveRecording(saveOnSubmit, event) {
 }
 
 async function blackListPhone(tfaTwilio, blackList, phoneInputId, validateBlackList, saveOnSubmit, event) {
-    if (!blackList || !phoneInputId) return;
     const phoneInput = document.getElementById(phoneInputId);
-    if (!phoneInput) return;
+    if (!phoneInput) {
+        inputIdNoExist();
+        return;
+    }
     const phone = phoneInput.value;
     if (!phone || !regex.test(phone)) {
         showPhoneInvalidModal();
