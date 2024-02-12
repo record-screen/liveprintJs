@@ -46,7 +46,7 @@ async function showTfaModal(phone, event) {
                 <p>Enter the code sent to your authentication method or provide a backup code.</p>
                 <b>5-digits code</b>
                 <input type="text" id="code" style="padding: 10px" maxlength="5">
-                <p id="errorText" style="color: red;"></p>
+                <p id="error" style="color: red;"></p>
                 <p id="sendAnother" style="color: cornflowerblue; cursor: pointer;">Resend Code</p>
                 <button id="sendBtn" type="submit" style="background: #0b5ed7; color: white;">Verify</button>
                 <button id="closeTfa" style="margin-right: 10px">Close</button>
@@ -59,6 +59,8 @@ async function showTfaModal(phone, event) {
     const closeTfaDialog = document.getElementById("closeBtn");
     closeTfaDialog.addEventListener("click", () => {
         const phoneInfo = document.getElementById("phoneInfo");
+        const show2fa = document.getElementById("showTfa");
+            show2fa.innerText = "Continue";
         phoneInfo.close();
         tfaModal.close();
     });
@@ -66,6 +68,8 @@ async function showTfaModal(phone, event) {
     const closeTfa = document.getElementById("closeTfa");
     closeTfa.addEventListener("click", () => {
         const phoneInfo = document.getElementById("phoneInfo");
+        const show2fa = document.getElementById("showTfa");
+        show2fa.innerText = "Continue";
         phoneInfo.close();
         tfaModal.close();
     });
@@ -81,10 +85,10 @@ async function verifyTfaCode(phone, event) {
     });
 
     const sendBtn = document.getElementById("sendBtn");
+    const errorText = document.getElementById("error");
     sendBtn.addEventListener("click", async () => {
         sendBtn.innerText = "Verifying...";
         sendBtn.disabled = true;
-        const errorText = document.getElementById("errorText");
         const code = document.getElementById("code").value;
         const codeValid = await validate2faCode(code, phone);
         sendBtn.disabled = false;
@@ -96,8 +100,8 @@ async function verifyTfaCode(phone, event) {
         } else if (codeValid.status === 409) {
             errorText.textContent = "Code used. Please try again.";
             sendBtn.innerText = "Verify";
-        } else if (codeValid.status === 404) {
-            errorText.textContent = "Invalid code. Please try again.";
+        } else if (codeValid.status === 400) {
+            errorText.textContent = "Invalid code. Please enter a valid code.";
             sendBtn.innerText = "Verify";
         } else {
             errorText.textContent = "An unexpected error has occurred, please try again later.";
@@ -169,7 +173,7 @@ async function phoneInformationModal(phone, event) {
 
     const show2fa = document.getElementById("showTfa");
     show2fa.addEventListener("click",  async () => {
-        show2fa.innerText = "Verifying...";
+        show2fa.innerText = "Sending Code..";
         show2fa.disable = true;
         const response = await send2faCode(phone, clientToken)
         if (response.status === 200 ) {
