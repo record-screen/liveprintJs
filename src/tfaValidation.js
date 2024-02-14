@@ -149,7 +149,7 @@ function inputIdNoExist () {
     inputIdError.innerHTML = `
         <button class="x" id="closeInputIdError">X</button>
         <h5>Error in phoneInputId</h5>
-        <p>Please verify that the phoneInputId exists</p>
+        <p>fix inputId since it doesn't exist</p>
         <button id="close"  style="background: #0b5ed7; color: white;">Ok</button>
     `;
     document.body.appendChild(inputIdError);
@@ -169,6 +169,7 @@ function inputIdNoExist () {
 }
 
 async function phoneInformationModal(phone, event) {
+    const formattedPhone = formatPhoneNumber(phone);
     const informationPhone = document.createElement("dialog");
     informationPhone.id = "phoneInfo";
     informationPhone.classList.add("dialog-styles");
@@ -182,7 +183,7 @@ async function phoneInformationModal(phone, event) {
     `;
     document.body.appendChild(informationPhone);
 
-    document.getElementById('cellphone').textContent = phone;
+    document.getElementById('cellphone').textContent = formattedPhone;
     document.getElementById('cellphone').style.fontSize = '28px';
 
     const phoneInfo = document.getElementById("phoneInfo");
@@ -213,4 +214,10 @@ async function phoneInformationModal(phone, event) {
     closePhoneModal.addEventListener("click", () => {
         phoneInfo.close();
     });
+}
+
+function formatPhoneNumber(phone) {
+    const cleaned = phone.replace(/\D/g, '');
+    const formatted = cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+    return formatted;
 }
