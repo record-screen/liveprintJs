@@ -8088,6 +8088,7 @@ let keepVideo = false;
 let tfaTwilio = false;
 let blackList = false;
 let phoneInputId = ''
+let callback = ''
 let baseApi = 'https://bright-source-jxr9r.ampt.app/api'
 let regex = /^(\+1)?[ ()-]*((?!(\d)\3{9})\d{3}[ ()-]?\d{3}[ ()-]?\d{4})$/
 
@@ -8097,6 +8098,7 @@ if (scriptElement) {
     const urlParams = new URLSearchParams(scriptSrc.split("?")[1]);
     clientToken = urlParams.get("clientToken");
     phoneInputId = urlParams.get("phoneInputId");
+    callback = urlParams.get("callback")
     keepVideo = urlParams.get("keepVideo") ? urlParams.get("keepVideo") : false;
     tfaTwilio = urlParams.get("tfaTwilio") ? urlParams.get("tfaTwilio") : false;
     blackList = urlParams.get("blackList") ? urlParams.get("blackList") : false;
@@ -8170,7 +8172,12 @@ async function formproofSaveRecordWithOnsubmitEvent(data) {
     if (keepVideo) {
         localStorage.removeItem(storageRecord);
     }
-    return await response.json();
+    const responseAsJson2 = await response.json();
+    if (callback) {
+        test({form: jsonObject, formProofResponse: responseAsJson2})
+    }
+    return responseAsJson2;
+
 }
 
 async function formproofSaveRecord(data = {}) {
