@@ -1,6 +1,0 @@
-const scriptElement=document.getElementById("blackListPhone");if(scriptElement){const a=scriptElement.getAttribute("src"),b=new URLSearchParams(a.split("?")[1]);inputPhoneId=b.get("inputPhoneId")?b.get("inputPhoneId"):"phone"}else console.error("You need add id='blackListPhone' to script");const phoneInputElement=document.getElementById(inputPhoneId);phoneInputElement.addEventListener("blur",function(e){if("0000000000"===e.target.value){e=document.createElement("dialog");e.id="blackListPhoneDialog",e.innerHTML=`
-            <h5>Your phone is in blacklist.</h5>
-            <p>Do you want to continue and accept the call?</p>
-            <button id="blackListCancelBTn">No</button>
-            <button id="blackListContinueBTn">Yes</button>
-        `,document.body.appendChild(e);const t=document.getElementById("blackListPhoneDialog");t.showModal(),document.getElementById("blackListContinueBTn").addEventListener("click",function(){t.close()}),document.getElementById("blackListCancelBTn").addEventListener("click",function(){location.reload()})}});
